@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Youth Of God</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { Users, MessageCircle, Video, Calendar, LogOut, User, Send, Phone, Mail, MapPin } = lucide;
+
+        const YouthOfGodApp = () => {
+            const [currentUser, setCurrentUser] = useState(null);
+            const [members, setMembers] = useState([]);
+            const [currentView, setCurrentView] = useState('login');
+            const [messages, setMessages] = useState([]);
+            const [newMessage, setNewMessage] = useState('');
+            const [meetings, setMeetings] = useState([]);
+            const [newMeeting, setNewMeeting] = useState({ title: '', date: '', time: '' });
+
+            // Registration form state
+            const [registerForm, setRegisterForm] = useState({
+                firstName: '',
+                lastName: '',
+                email: '',
+                phone: '',
+                address: '',
+                dateOfBirth: '',
+                emergencyContact: '',
+                emergencyPhone: ''
+            });
+
+            // Login form state
+            const [loginForm, setLoginForm] = useState({
+                email: '',
+                password: ''
+            });
+
+            // Handle registration
+            const handleRegister = (e) => {
+                e.preventDefault();
+                if (registerForm.firstName && registerForm.lastName && registerForm.email) {
+                    const newMember = {
+                        id: Date.now(),
+                        ...registerForm,
+                        password: 'password123',
+                        joinDate: new Date().toLocaleDateString()
+                    };
+                    setMembers([...members, newMember]);
+                    setCurrentUser(newMember);
+                    setCurrentView('dashboard');
+                    setRegisterForm({
+                        firstName: '',
+                        lastName: '',
+                        email: '',
+                        phone: '',
+                        address: '',
+                        dateOfBirth: '',
+                        emergencyContact: '',
+                        emergencyPhone: ''
+                    });
+                }
+            };
+
+            // Handle login
+            const handleLogin = (e) => {
+                e.preventDefault();
+                const member = members.find(m => m.email === loginForm.email);
+                if (member) {
+                    setCurrentUser(member);
+                    setCurrentView('dashboard');
+                    setLoginForm({ email: '', password: '' });
+                } else {
+                    alert('Member not found. Please register first.');
+                }
+            };
+
+            // Handle logout
+            const handleLogout = () => {
+                setCurrentUser(null);
+                setCurrentView('login');
+            };
+
+            // Send message
+            const sendMessage = () => {
+                if (newMessage.trim() && currentUser) {
+                    const message = {
+                        id: Date.now(),
+                        text: newMessage,
+                        sender: currentUser.firstName + ' ' + currentUser.lastName,
+                        timestamp: new Date().toLocaleTimeString(),
+                        senderId: currentUser.id
+                    };
+                    setMessages([...messages, message]);
+                    setNewMessage('');
+                }
+            };
+
+            // Create meeting
+            const createMeeting = (e) => {
+                e.preventDefault();
+                if (newMeeting.title && newMeeting.date && newMeeting.time) {
+                    const meeting = {
+                        id: Date.now(),
+                        ...newMeeting,
+                        organizer: currentUser.firstName + ' ' + currentUser.lastName,
+                        participants: []
+                    };
+                    setMeetings([...meetings, meeting]);
+                    setNewMeeting({ title: '', date: '', time: '' });
+                }
+            };
+
+            // Join meeting
+            const joinMeeting = (meetingId) => {
+                setMeetings(meetings.map(meeting => 
+                    meeting.id === meetingId 
+                        ? { ...meeting, participants: [...meeting.participants, currentUser.id] }
+                        : meeting
+                ));
+            };
+
+            // Registration View
+            const RegisterView = () => (
+                <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+                        <div className="text-center mb-6">
+                            <h1 className="text-3xl font-bold text-blue-900">Youth Of God</h1>
+                            <p className="text-gray-600 mt-2">Join Our Church Community</p>
+                        </div>
+                        
+                        <form onSubmit={handleRegister} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <input
+                                    type="text"
+                                    placeholder="First Name"
+                                    value={registerForm.firstName}
+                                    onChange={(e) => setRegisterForm({...registerForm, firstName: e.target.value})}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Last Name"
+                                    value={registerForm.lastName}
+                                    onChange={(e) => setRegisterForm({...registerForm, lastName: e.target.value})}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required
+                                />
+                            </div>
+                            
+                            <input
+                                type="email"
+                                placeholder="Email Address"
+                                value={registerForm.email}
+                                onChange={(e) => setRegisterForm({...registerForm, email: e.target.value})}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            />
+                            
+                            <input
+                                type="tel"
+                                placeholder="Phone Number"
+                                value={registerForm.phone}
+                                onChange={(e) => setRegisterForm({...registerForm, phone: e.target.value})}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            
+                            <input
+                                type="text"
+                                placeholder="Address"
+                                value={registerForm.address}
+                                onChange={(e) => setRegisterForm({...registerForm, address: e.target.value})}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            
+                            <input
+                                type="date"
+                                placeholder="Date of Birth"
+                                value={registerForm.dateOfBirth}
+                                onChange={(e) => setRegisterForm({...registerForm, dateOfBirth: e.target.value})}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            
+                            <input
+                                type="text"
+                                placeholder="Emergency Contact Name"
+                                value={registerForm.emergencyContact}
+                                onChange={(e) => setRegisterForm({...registerForm, emergencyContact: e.target.value})}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            
+                            <input
+                                type="tel"
+                                placeholder="Emergency Contact Phone"
+                                value={registerForm.emergencyPhone}
+                                onChange={(e) => setRegisterForm({...registerForm, emergencyPhone: e.target.value})}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            
+                            <button
+                                type="submit"
+                                className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-200 font-semibold"
+                            >
+                                Register
+                            </button>
+                        </form>
+                        
+                        <div className="mt-4 text-center">
+                            <button
+                                onClick={() => setCurrentView('login')}
+                                className="text-blue-600 hover:underline"
+                            >
+                                Already a member? Sign In
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // Login View
+            const LoginView = () => (
+                <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+                        <div className="text-center mb-6">
+                            <h1 className="text-3xl font-bold text-blue-900">Youth Of God</h1>
+                            <p className="text-gray-600 mt-2">Welcome Back</p>
+                        </div>
+                        
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            <input
+                                type="email"
+                                placeholder="Email Address"
+                                value={loginForm.email}
+                                onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            />
+                            
+                            <input
+                                type="password"
+                                placeholder="Password"
+                                value={loginForm.password}
+                                onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            />
+                            
+                            <button
+                                type="submit"
+                                className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-200 font-semibold"
+                            >
+                                Sign In
+                            </button>
+                        </form>
+                        
+                        <div className="mt-4 text-center">
+                            <button
+                                onClick={() => setCurrentView('register')}
+                                className="text-blue-600 hover:underline"
+                            >
+                                New member? Register here
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // Main App Layout
+            const AppLayout = ({ children }) => (
+                <div className="min-h-screen bg-gray-100">
+                    <nav className="bg-blue-900 text-white p-4">
+                        <div className="flex justify-between items-center">
+                            <h1 className="text-xl font-bold">Youth Of God</h1>
+                            <div className="flex items-center gap-4">
+                                <span className="text-sm">Welcome, {currentUser?.firstName}</span>
+                                <button
+                                    onClick={handleLogout}
+                                    className="flex items-center gap-2 bg-blue-800 px-3 py-1 rounded hover:bg-blue-700"
+                                >
+                                    <LogOut size={16} />
+                                    Logout
+                                </button>
+                            </div>
+                        </div>
+                    </nav>
+                    
+                    <div className="flex">
+                        <aside className="bg-white w-64 min-h-screen shadow-lg">
+                            <div className="p-4">
+                                <button
+                                    onClick={() => setCurrentView('dashboard')}
+                                    className={`w-full text-left p-3 rounded-lg mb-2 flex items-center gap-3 ${
+                                        currentView === 'dashboard' ? 'bg-blue-100 text-blue-800' : 'hover:bg-gray-100'
+                                    }`}
+                                >
+                                    <User size={20} />
+                                    Dashboard
+                                </button>
+                                <button
+                                    onClick={() => setCurrentView('members')}
+                                    className={`w-full text-left p-3 rounded-lg mb-2 flex items-center gap-3 ${
+                                        currentView === 'members' ? 'bg-blue-100 text-blue-800' : 'hover:bg-gray-100'
+                                    }`}
+                                >
+                                    <Users size={20} />
+                                    Members
+                                </button>
+                                <button
+                                    onClick={() => setCurrentView('chat')}
+                                    className={`w-full text-left p-3 rounded-lg mb-2 flex items-center gap-3 ${
+                                        currentView === 'chat' ? 'bg-blue-100 text-blue-800' : 'hover:bg-gray-100'
+                                    }`}
+                                >
+                                    <MessageCircle size={20} />
+                                    Chat
+                                </button>
+                                <button
+                                    onClick={() => setCurrentView('meetings')}
+                                    className={`w-full text-left p-3 rounded-lg mb-2 flex items-center gap-3 ${
+                                        currentView === 'meetings' ? 'bg-blue-100 text-blue-800' : 'hover:bg-gray-100'
+                                    }`}
+                                >
+                                    <Video size={20} />
+                                    Meetings
+                                </button>
+                            </div>
+                        </aside>
+                        
+                        <main className="flex-1 p-6">
+                            {children}
+                        </main>
+                    </div>
+                </div>
+            );
+
+            // Dashboard View
+            const DashboardView = () => (
+                <div className="space-y-6">
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Welcome to Youth Of God</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="bg-blue-50 p-4 rounded-lg">
+                                <h3 className="font-semibold text-blue-800">Total Members</h3>
+                                <p className="text-2xl font-bold text-blue-600">{members.length}</p>
+                            </div>
+                            <div className="bg-green-50 p-4 rounded-lg">
+                                <h3 className="font-semibold text-green-800">Active Meetings</h3>
+                                <p className="text-2xl font-bold text-green-600">{meetings.length}</p>
+                            </div>
+                            <div className="bg-purple-50 p-4 rounded-lg">
+                                <h3 className="font-semibold text-purple-800">Messages Today</h3>
+                                <p className="text-2xl font-bold text-purple-600">{messages.length}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+                        <div className="space-y-2">
+                            {messages.slice(-5).map(msg => (
+                                <div key={msg.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
+                                    <MessageCircle size={16} className="text-blue-500" />
+                                    <span className="text-sm">{msg.sender} sent a message at {msg.timestamp}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // Members View
+            const MembersView = () => (
+                <div className="bg-white rounded-lg shadow p-6">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Church Members</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {members.map(member => (
+                            <div key={member.id} className="border rounded-lg p-4 hover:shadow-md transition duration-200">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                                        {member.firstName[0]}{member.lastName[0]}
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold">{member.firstName} {member.lastName}</h3>
+                                        <p className="text-sm text-gray-600">Member since {member.joinDate}</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex items-center gap-2">
+                                        <Mail size={14} className="text-gray-500" />
+                                        <span>{member.email}</span>
+                                    </div>
+                                    {member.phone && (
+                                        <div className="flex items-center gap-2">
+                                            <Phone size={14} className="text-gray-500" />
+                                            <span>{member.phone}</span>
+                                        </div>
+                                    )}
+                                    {member.address && (
+                                        <div className="flex items-center gap-2">
+                                            <MapPin size={14} className="text-gray-500" />
+                                            <span>{member.address}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+
+            // Chat View
+            const ChatView = () => (
+                <div className="bg-white rounded-lg shadow h-96 flex flex-col">
+                    <div className="p-4 border-b">
+                        <h2 className="text-xl font-bold text-gray-800">Church Chat</h2>
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                        {messages.map(msg => (
+                            <div
+                                key={msg.id}
+                                className={`flex ${msg.senderId === currentUser?.id ? 'justify-end' : 'justify-start'}`}
+                            >
+                                <div
+                                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                                        msg.senderId === currentUser?.id
+                                            ? 'bg-blue-500 text-white'
+                                            : 'bg-gray-200 text-gray-800'
+                                    }`}
+                                >
+                                    <p className="text-sm font-semibold">{msg.sender}</p>
+                                    <p>{msg.text}</p>
+                                    <p className="text-xs opacity-75 mt-1">{msg.timestamp}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <div className="p-4 border-t">
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={newMessage}
+                                onChange={(e) => setNewMessage(e.target.value)}
+                                placeholder="Type your message..."
+                                className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                            />
+                            <button
+                                onClick={sendMessage}
+                                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center gap-2"
+                            >
+                                <Send size={16} />
+                                Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // Meetings View
+            const MeetingsView = () => (
+                <div className="space-y-6">
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Schedule New Meeting</h2>
+                        <form onSubmit={createMeeting} className="space-y-4">
+                            <input
+                                type="text"
+                                placeholder="Meeting Title"
+                                value={newMeeting.title}
+                                onChange={(e) => setNewMeeting({...newMeeting, title: e.target.value})}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <div className="grid grid-cols-2 gap-4">
+                                <input
+                                    type="date"
+                                    value={newMeeting.date}
+                                    onChange={(e) => setNewMeeting({...newMeeting, date: e.target.value})}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                <input
+                                    type="time"
+                                    value={newMeeting.time}
+                                    onChange={(e) => setNewMeeting({...newMeeting, time: e.target.value})}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 flex items-center gap-2"
+                            >
+                                <Calendar size={16} />
+                                Schedule Meeting
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h3 className="text-xl font-bold text-gray-800 mb-4">Upcoming Meetings</h3>
+                        <div className="space-y-4">
+                            {meetings.map(meeting => (
+                                <div key={meeting.id} className="border rounded-lg p-4 flex justify-between items-center">
+                                    <div>
+                                        <h4 className="font-semibold">{meeting.title}</h4>
+                                        <p className="text-sm text-gray-600">
+                                            {meeting.date} at {meeting.time} | Organized by {meeting.organizer}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {meeting.participants.length} participants
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => joinMeeting(meeting.id)}
+                                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center gap-2"
+                                        disabled={meeting.participants.includes(currentUser?.id)}
+                                    >
+                                        <Video size={16} />
+                                        {meeting.participants.includes(currentUser?.id) ? 'Joined' : 'Join'}
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // Render based on current view
+            if (!currentUser) {
+                return currentView === 'register' ? <RegisterView /> : <LoginView />;
+            }
+
+            return (
+                <AppLayout>
+                    {currentView === 'dashboard' && <DashboardView />}
+                    {currentView === 'members' && <MembersView />}
+                    {currentView === 'chat' && <ChatView />}
+                    {currentView === 'meetings' && <MeetingsView />}
+                </AppLayout>
+            );
+        };
+
+        ReactDOM.render(<YouthOfGodApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
